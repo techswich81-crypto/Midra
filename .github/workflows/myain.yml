@@ -16,12 +16,23 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Unzip project if it was uploaded as a .zip
+        run: |
+          Z=$(find . -maxdepth 2 -iname '*.zip' -not -path './.git/*' | head -n 1)
+          if [ -n "$Z" ]; then
+            echo "Zip mila: $Z"
+            mkdir -p _src
+            unzip -q -o "$Z" -d _src
+          else
+            echo "Zip nahi mila, repo ki files seedhe use hongi."
+          fi
+
       - name: Find project folder
         run: |
           S=$(find . -name settings.gradle.kts -not -path './.git/*' | head -n 1)
           if [ -z "$S" ]; then
             echo "settings.gradle.kts nahi mila. Repo me ye files hain:"
-            find . -maxdepth 3 -not -path './.git/*' | head -80
+            find . -maxdepth 4 -not -path './.git/*' | head -100
             exit 1
           fi
           D=$(dirname "$S")
@@ -37,7 +48,7 @@ jobs:
           GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
         run: |
           test -n "$GOOGLE_SERVICES_JSON_BASE64" || { echo "Secret GOOGLE_SERVICES_JSON_BASE64 missing"; exit 1; }
-          test -d app || { echo "app folder is project me nahi hai. Yahan ye hai:"; ls -la; exit 1; }
+          test -d app || { echo "app folder nahi mila. Yahan ye hai:"; ls -la; exit 1; }
           echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 -d > app/google-services.json
 
       - name: Decode fixed debug keystore (optional)
